@@ -34,7 +34,7 @@ export default function App() {
     async function fetchMovies() {
       try{
         setIsLoading(true)
-        const res = await fetch(`http://www.omdbapi.com/?apikey=${key}&s=${query}`)
+        const res = await fetch(`https://www.omdbapi.com/?apikey=${key}&s=${query}`)
         const data = await res.json()
         if(data.Error === 'Movie not found!') throw new Error('Movie Not found 🚫')  
         setMovies(data.Search)
@@ -182,7 +182,7 @@ function MovieDetailsBox({selectedID, onCloseSelectedID,  onAddWatchedMovie, wat
 
    useEffect(function() {
     async function fetchMovieDetails() {
-      const res = await fetch(`http://www.omdbapi.com/?apikey=${key}&i=${selectedID}`)
+      const res = await fetch(`https://www.omdbapi.com/?apikey=${key}&i=${selectedID}`)
       const data = await res.json()
       setMovieInfo(data)
     }
