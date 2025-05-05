@@ -31,26 +31,38 @@ export default function App() {
   }
 
   useEffect(function() {
+    //killing the prviou details
+    const controller = new AbortController()
     async function fetchMovies() {
       try{
         setIsLoading(true)
-        const res = await fetch(`https://www.omdbapi.com/?apikey=${key}&s=${query}`)
+        setError("")
+        const res = await fetch(`https://www.omdbapi.com/?apikey=${key}&s=${query}`, {signal: controller.signal})
         const data = await res.json()
         if(data.Error === 'Movie not found!') throw new Error('Movie Not found 🚫')  
         setMovies(data.Search)
+        setError("")
         
       }catch(err) {
-        setError(err.message)
+        if(err.name !== 'AbortError') {
+          setError(err.message)
+        }
       }finally {
         setIsLoading(false)
       }
-      if(query.length < 3) {
-        setMovies([])
-        setError('')
-      }
     }
 
+    if(query.length < 3) {
+      setMovies([])
+      setError('')
+      return
+    }
+
+    handleCloseMovieDetails()
     fetchMovies()
+    return function() {
+      controller.abort()
+    }
   }, [query])
 
   return (
@@ -179,7 +191,22 @@ function MovieDetailsBox({selectedID, onCloseSelectedID,  onAddWatchedMovie, wat
 
   const isWatched = watched.map(watched => watched.imdbID).includes(selectedID)
   const watchedUserRating = watched.find(watched => watched.imdbID === selectedID)?.userRating
-
+   //USEEFFECT 
+      
+      useEffect(function() {
+        const EsacpeBtn =  function(e) {
+          if(e.key === 'Escape') {
+             onCloseSelectedID()
+             console.log('closing')
+          }
+        }
+        document.addEventListener('keydown', EsacpeBtn)
+                 //Clean up function killing the prvious data
+        return function() {
+          document.removeEventListener('keydown', EsacpeBtn)
+        }
+      }, [onCloseSelectedID])
+ 
    useEffect(function() {
     async function fetchMovieDetails() {
       const res = await fetch(`https://www.omdbapi.com/?apikey=${key}&i=${selectedID}`)
@@ -189,11 +216,22 @@ function MovieDetailsBox({selectedID, onCloseSelectedID,  onAddWatchedMovie, wat
     fetchMovieDetails()
    }, [selectedID])
 
+
+     useEffect(function() {
+      document.title = `Movie: ${movieInfo.Title}`
+      //clean up function (return a new function which undo the useEffect function)
+      return function() {
+        document.title = '🍿usePopCorn'
+      }
+     }, [movieInfo.Title])
+
    function handleClickAddWatchedMovie(watchedMovie) {
     const watchedMovieInfo = {...watchedMovie, userRating}
     onAddWatchedMovie(watchedMovieInfo)
     onCloseSelectedID()
    }
+
+ 
 
   return (
     <div className="details">
