@@ -10,7 +10,7 @@ export default function App() {
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState(function() {
     const storeMovie = JSON.parse(localStorage.getItem('watched'))
-    return storeMovie
+    return storeMovie || []
   });
   const [isLoading, setIsLoading] = useState(false)
   const [isError, setError] = useState('')
@@ -350,9 +350,9 @@ function WatchedMovieList({movie, onDeleteWatchedMovie}) {
 }
 
 function MovieSummary({watched}) {
-  const avgImdbRating = Math.trunc(average(watched?.map((movie) => movie.imdbRating)));
-  const avgUserRating = Math.trunc(average(watched?.map((movie) => movie.userRating)));
-  const avgRuntime = Math.trunc(average(watched?.map((movie) => +movie.Runtime.split(' ')[0])));
+  const avgImdbRating = Math.trunc(average(watched.map((movie) => movie.imdbRating)));
+  const avgUserRating = Math.trunc(average(watched.map((movie) => movie.userRating)));
+  const avgRuntime = Math.trunc(average(watched.map((movie) => +movie.Runtime.split(' ')[0])));
   return(
     <div className="summary">
           <h2>Movies you watched</h2>
