@@ -15,14 +15,14 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false)
   const [isError, setError] = useState('')
   const [query, setQuery] = useState('')
-  const [selectedID, setSelectedID] = useState('')
+  const [selectedID, setSelectedID] = useState(null)
 
   function handleGetSelectedID(selectedId) {
-    setSelectedID(selectedId)
+    setSelectedID(selectedID => selectedID === selectedId ? null : selectedId)
   }
 
   function handleCloseMovieDetails() {
-    setSelectedID('')
+    setSelectedID(null)
   }
 
   function handleAddWatchedMovie(newwatchedMovie) {
@@ -211,6 +211,7 @@ function Box({children}) {
 // }
 
 function MovieDetailsBox({selectedID, onCloseSelectedID,  onAddWatchedMovie, watched}) {
+    const [isLoading, setIsLoading] = useState(false)
   const [movieInfo, setMovieInfo] = useState({})
   const [userRating, setRating] = useState('')
 
@@ -219,9 +220,6 @@ function MovieDetailsBox({selectedID, onCloseSelectedID,  onAddWatchedMovie, wat
   const isWatched = watched.map(watched => watched.imdbID).includes(selectedID)
   const watchedUserRating = watched.find(watched => watched.imdbID === selectedID)?.userRating
    //USEEFFECT 
-
-   
-      
   useEffect(function() {
         const EsacpeBtn =  function(e) {
           if(e.key === 'Escape') {
@@ -238,9 +236,11 @@ function MovieDetailsBox({selectedID, onCloseSelectedID,  onAddWatchedMovie, wat
  
    useEffect(function() {
     async function fetchMovieDetails() {
+      setIsLoading(true)
       const res = await fetch(`https://www.omdbapi.com/?apikey=${key}&i=${selectedID}`)
       const data = await res.json()
       setMovieInfo(data)
+      setIsLoading(false)
     }
     fetchMovieDetails()
    }, [selectedID])
@@ -260,10 +260,10 @@ function MovieDetailsBox({selectedID, onCloseSelectedID,  onAddWatchedMovie, wat
     onCloseSelectedID()
    }
 
- 
 
   return (
-    <div className="details">
+   isLoading ? <Loader /> : 
+   <div className="details">
       <header>
        <button className="btn-back" onClick={onCloseSelectedID}>&larr;</button>
        <img src={movieInfo.Poster} alt={`Moovie Poster of ${movieInfo.Title}`} />
@@ -325,6 +325,7 @@ function MovieWatchedUl({watched, onDeleteWatchedMovie}) {
 }
 
 function WatchedMovieList({movie, onDeleteWatchedMovie}) {
+  
   return (
     <li>
     <img src={movie.Poster} alt={`${movie.Title} poster`} />
@@ -351,7 +352,7 @@ function WatchedMovieList({movie, onDeleteWatchedMovie}) {
 function MovieSummary({watched}) {
   const avgImdbRating = Math.trunc(average(watched.map((movie) => movie.imdbRating)));
   const avgUserRating = Math.trunc(average(watched.map((movie) => movie.userRating)));
-  const avgRuntime = average(watched.map((movie) => +movie.Runtime.split(' ')[0]));
+  const avgRuntime = Math.trunc(average(watched.map((movie) => +movie.Runtime.split(' ')[0])));
   return(
     <div className="summary">
           <h2>Movies you watched</h2>
