@@ -1,22 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import StarRating from "./StarRating";
-
+import { useMovieFetch } from "./useMovieFetch";
+import { useLocalStorage } from "./useLocalStorage";
+import { useKeyPress } from "./useKeyPress";
 
 const average = (arr) => arr?.reduce((acc, cur, i, arr) => acc + cur / arr.length, 0);
 
 const key = '6cac7d8a'
 
 export default function App() {
-  const [movies, setMovies] = useState([]);
-  const [watched, setWatched] = useState(function() {
-    const storeMovie = JSON.parse(localStorage.getItem('watched'))
-    return storeMovie || []
-  });
-  const [isLoading, setIsLoading] = useState(false)
-  const [isError, setError] = useState('')
   const [query, setQuery] = useState('')
   const [selectedID, setSelectedID] = useState(null)
-
+  const [movies, isLoading, isError] = useMovieFetch(query)
+  const [watched, setWatched] = useLocalStorage([], 'Watched')
+ 
   function handleGetSelectedID(selectedId) {
     setSelectedID(selectedID => selectedID === selectedId ? null : selectedId)
   }
@@ -32,45 +29,6 @@ export default function App() {
   function handleDeleteWactedMovie(id) {
     setWatched(watched => watched.filter(watched=> watched.imdbID !== id))
   }
-
-  useEffect(function() {
-    localStorage.setItem('watched', JSON.stringify(watched))
-   })
-
-  useEffect(function() {
-    //killing the prviou details
-    const controller = new AbortController()
-    async function fetchMovies() {
-      try{
-        setIsLoading(true)
-        setError("")
-        const res = await fetch(`https://www.omdbapi.com/?apikey=${key}&s=${query}`, {signal: controller.signal})
-        const data = await res.json()
-        if(data.Error === 'Movie not found!') throw new Error('Movie Not found 🚫')  
-        setMovies(data.Search)
-        setError("")
-        
-      }catch(err) {
-        if(err.name !== 'AbortError') {
-          setError(err.message)
-        }
-      }finally {
-        setIsLoading(false)
-      }
-    }
-
-    if(query.length < 3) {
-      setMovies([])
-      setError('')
-      return
-    }
-
-    handleCloseMovieDetails()
-    fetchMovies()
-    return function() {
-      controller.abort()
-    }
-  }, [query])
 
   return (
     <>
@@ -136,20 +94,11 @@ function Logo() {
 function SearchBar({query, setQuery}) {
   const inputEl = useRef(null)
 
-  useEffect(function() {
-    const callBack = function(e) {
+  useKeyPress('Enter', function() {
       if(document.activeElement === inputEl.current) return;
-
-      if(e.code === 'Enter') {
-        inputEl.current.focus()
-        setQuery("")
-      }
-    }
-    document.addEventListener('keydown', callBack)
-
-    return () => document.addEventListener('keydown', callBack)
-  }, [setQuery])
-
+      inputEl.current.focus()
+      setQuery("")
+  })
 
   return (
     <input
@@ -211,30 +160,16 @@ function Box({children}) {
 // }
 
 function MovieDetailsBox({selectedID, onCloseSelectedID,  onAddWatchedMovie, watched}) {
-    const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const [movieInfo, setMovieInfo] = useState({})
   const [userRating, setRating] = useState('')
 
-
-
   const isWatched = watched.map(watched => watched.imdbID).includes(selectedID)
   const watchedUserRating = watched.find(watched => watched.imdbID === selectedID)?.userRating
-   //USEEFFECT 
-  useEffect(function() {
-        const EsacpeBtn =  function(e) {
-          if(e.key === 'Escape') {
-             onCloseSelectedID()
-             console.log('closing')
-          }
-        }
-        document.addEventListener('keydown', EsacpeBtn)
-                 //Clean up function killing the prvious data
-        return function() {
-          document.removeEventListener('keydown', EsacpeBtn)
-        }
-      }, [onCloseSelectedID])
+
+  useKeyPress('Escape', onCloseSelectedID)
  
-   useEffect(function() {
+  useEffect(function() {
     async function fetchMovieDetails() {
       setIsLoading(true)
       const res = await fetch(`https://www.omdbapi.com/?apikey=${key}&i=${selectedID}`)
@@ -243,23 +178,21 @@ function MovieDetailsBox({selectedID, onCloseSelectedID,  onAddWatchedMovie, wat
       setIsLoading(false)
     }
     fetchMovieDetails()
-   }, [selectedID])
+  }, [selectedID])
 
 
-     useEffect(function() {
+  useEffect(function() {
       document.title = `Movie: ${movieInfo.Title}`
-      //clean up function (return a new function which undo the useEffect function)
       return function() {
         document.title = '🍿usePopCorn'
       }
-     }, [movieInfo.Title])
+  }, [movieInfo.Title])
 
    function handleClickAddWatchedMovie(watchedMovie) {
     const watchedMovieInfo = {...watchedMovie, userRating}
     onAddWatchedMovie(watchedMovieInfo)
     onCloseSelectedID()
    }
-
 
   return (
    isLoading ? <Loader /> : 
@@ -327,7 +260,7 @@ function MovieWatchedUl({watched, onDeleteWatchedMovie}) {
 function WatchedMovieList({movie, onDeleteWatchedMovie}) {
   
   return (
-    <li>
+    <li >
     <img src={movie.Poster} alt={`${movie.Title} poster`} />
     <h3>{movie.Title}</h3>
     <div>
