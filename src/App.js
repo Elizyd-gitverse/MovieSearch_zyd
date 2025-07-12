@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import StarRating from "./StarRating";
 
 
@@ -8,7 +8,10 @@ const key = '6cac7d8a'
 
 export default function App() {
   const [movies, setMovies] = useState([]);
-  const [watched, setWatched] = useState([]);
+  const [watched, setWatched] = useState(function() {
+    const storeMovie = JSON.parse(localStorage.getItem('watched'))
+    return storeMovie
+  });
   const [isLoading, setIsLoading] = useState(false)
   const [isError, setError] = useState('')
   const [query, setQuery] = useState('')
@@ -29,6 +32,10 @@ export default function App() {
   function handleDeleteWactedMovie(id) {
     setWatched(watched => watched.filter(watched=> watched.imdbID !== id))
   }
+
+  useEffect(function() {
+    localStorage.setItem('watched', JSON.stringify(watched))
+   })
 
   useEffect(function() {
     //killing the prviou details
@@ -127,6 +134,23 @@ function Logo() {
 }
 
 function SearchBar({query, setQuery}) {
+  const inputEl = useRef(null)
+
+  useEffect(function() {
+    const callBack = function(e) {
+      if(document.activeElement === inputEl.current) return;
+
+      if(e.code === 'Enter') {
+        inputEl.current.focus()
+        setQuery("")
+      }
+    }
+    document.addEventListener('keydown', callBack)
+
+    return () => document.addEventListener('keydown', callBack)
+  }, [setQuery])
+
+
   return (
     <input
     className="search"
@@ -134,6 +158,7 @@ function SearchBar({query, setQuery}) {
     placeholder="Search movies..."
     value={query}
     onChange={(e) => setQuery(e.target.value)}
+    ref={inputEl}
   />
   )
 }
@@ -189,11 +214,15 @@ function MovieDetailsBox({selectedID, onCloseSelectedID,  onAddWatchedMovie, wat
   const [movieInfo, setMovieInfo] = useState({})
   const [userRating, setRating] = useState('')
 
+
+
   const isWatched = watched.map(watched => watched.imdbID).includes(selectedID)
   const watchedUserRating = watched.find(watched => watched.imdbID === selectedID)?.userRating
    //USEEFFECT 
+
+   
       
-      useEffect(function() {
+  useEffect(function() {
         const EsacpeBtn =  function(e) {
           if(e.key === 'Escape') {
              onCloseSelectedID()
