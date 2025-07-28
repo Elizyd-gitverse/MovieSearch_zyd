@@ -47,7 +47,7 @@ export default function App() {
         <Box>
           {selectedID ? <MovieDetailsBox selectedID={selectedID} onCloseSelectedID={handleCloseMovieDetails} onAddWatchedMovie={handleAddWatchedMovie} watched={watched} /> : <>
             <MovieSummary watched={watched}/>
-            <MovieWatchedUl watched={watched} onDeleteWatchedMovie={handleDeleteWactedMovie} />
+            <MovieWatchedUl watched={watched} onDeleteWatchedMovie={handleDeleteWactedMovie} onSelectedID={handleGetSelectedID}/>
           </> }
          
         </Box>
@@ -249,18 +249,23 @@ function MovieList({movie, onSelectedID}) {
   )
 }
 
-function MovieWatchedUl({watched, onDeleteWatchedMovie}) {
+function MovieWatchedUl({watched, onDeleteWatchedMovie, onSelectedID}) {
   return ( 
     <ul className="list">
-    {watched.map((movie) => ( <WatchedMovieList movie={movie} key={movie.imdbID} onDeleteWatchedMovie={onDeleteWatchedMovie}/>))}
+    {watched.map((movie) => ( <WatchedMovieList movie={movie} key={movie.imdbID} onDeleteWatchedMovie={onDeleteWatchedMovie} onSelectedID={onSelectedID}/>))}
   </ul>
   )
 }
 
-function WatchedMovieList({movie, onDeleteWatchedMovie}) {
+function WatchedMovieList({movie, onDeleteWatchedMovie, onSelectedID}) {
+
+  function handleDeleteMovie(e) {
+  e.stopPropagation()
+  onDeleteWatchedMovie(movie.imdbID)
+  }
   
   return (
-    <li >
+    <li onClick={() => onSelectedID(movie.imdbID)}>
     <img src={movie.Poster} alt={`${movie.Title} poster`} />
     <h3>{movie.Title}</h3>
     <div>
@@ -277,7 +282,7 @@ function WatchedMovieList({movie, onDeleteWatchedMovie}) {
         <span>{movie.Runtime}</span>
       </p>
     </div>
-    <button className="btn-delete" onClick={() => onDeleteWatchedMovie(movie.imdbID)} >X</button>
+    <button className="btn-delete" onClick={handleDeleteMovie} >X</button>
   </li>
   )
 }
