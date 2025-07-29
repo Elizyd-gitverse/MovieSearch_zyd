@@ -1,7 +1,7 @@
 import { useState } from "react"
-import PropTypes from 'prop-types' //in case we have reusable props to make them highlight what exactly have to be pass in that component of proplike is it no. string, function etc not necessary depends
+import PropTypes from 'prop-types' 
 
-//STYLING ( CSS ) IN REACT FOR PROPERTY NAME WE USE CAMELCASE THIS IS BETTER PASS IN AS OBJECT OBVIOUSLY I KNOW THAT
+//STYLING ( CSS ) IN REACT FOR PROPERTY NAME WE USE CAMELCASE
 const constainerStar = {
     display: 'flex',
     alignItems: 'center',
@@ -12,7 +12,7 @@ const starContainerStyle = {
     display: 'flex',
 }
 
-//for propType warning not necessary
+//for propType warning 
 StarRating.propTypes = {
     maxRating: PropTypes.number.isRequired,
     color: PropTypes.string,
@@ -20,7 +20,7 @@ StarRating.propTypes = {
     className: PropTypes.string,
     message: PropTypes.array,
     onSetMovieRating: PropTypes.func
-    // there is for boolean && function
+    //  boolean && function
 
 }
 
@@ -31,8 +31,7 @@ export  function Text({children, color = 'orange'}) {
 }
 
 export default function StarRating({maxRating = 5, color = '#fcc419', size = 48, className = '', message = [], onSetMovieRating}) {
-    //adding props to props to internal data from external data
-    // message =[] we pass in as array but default
+
     const textStyle = {
         lineHeight: '1',
         margin:'0',
@@ -45,13 +44,12 @@ export default function StarRating({maxRating = 5, color = '#fcc419', size = 48,
 
     function HandleRating(rating) {
         setRating(rating)
-        // onSetMovieRating(rating)
+        onSetMovieRating(rating)
         //external useState been use internal data
     }
 
     function handleHoverRateIn(rating) {
         setTempRating(rating)
-        onSetMovieRating(rating)
     }
 
     function handlerHoverRateOut(rating) {
@@ -70,8 +68,6 @@ export default function StarRating({maxRating = 5, color = '#fcc419', size = 48,
              color={color}
              size={size}
              key={key}/>)}
-                {/* useing CHILD TO PARENT COMMUNICATION cuz based on the key we recive on clicking the star the 1 gets added to it we cannot use rating from useState cuz thats not what we want to update i get what i said   */}
-                {/* full case when the 2d star is clicked the rating from useState becomes 2 now 2 >= 0 + 1 , 1 + 1 true star full(true) now 2 is not greater equal to 2 + 1 so empt star(false) */}
            </div>
            <p style={textStyle}>{message.length === maxRating ? message[tempRating ? tempRating - 1 : rating - 1]: tempRating || rating || ''}</p>
         </div>
